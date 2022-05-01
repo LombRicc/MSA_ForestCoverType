@@ -2,6 +2,7 @@ import numpy
 import numpy as np
 
 from sklearn.model_selection import KFold
+from sklearn.ensemble import AdaBoostClassifier
 
 from adaboost import AdaBoost
 
@@ -29,7 +30,7 @@ t = 10
 #k number of folds
 k = 4
 
-accuracies = []
+accMeans = []
 
 kf = KFold(n_splits=k)
 for train_index, test_index in kf.split(X):
@@ -38,11 +39,13 @@ for train_index, test_index in kf.split(X):
     y_train, y_test = y[train_index], y[test_index]
 
     clf = AdaBoost(boostingRounds=t)
+    #clf = AdaBoostClassifier(n_estimators=t)
 
     maxPred = [-1] * len(y_test)
-
+    accuracies = []
     for classifier in range(7):
-        #y_train contains the classes column, I have to change the behavior so that when the classifier1 checks it will only have 1 and -1 for all the others, class2 will have 2 and -1 for all the others and so on...
+        y_train[y_train == classifier + 1] = 1
+        y_test[y_test == classifier + 1] = 1
         y_train[y_train != classifier + 1] = -1
         y_test[y_test != classifier + 1] = -1
         clf.fit(X_train, y_train)
@@ -53,9 +56,11 @@ for train_index, test_index in kf.split(X):
             if(y_pred[i] > maxPred[i]):
                 maxPred[i] = y_pred[i]
 
-    accuracies.append(accuracy(y_test, maxPred))
-    accMean = sum(accuracies) / len(accuracies)
-    print("Accuracy:", round(accMean, 2))
+        accuracies.append(accuracy(y_test, maxPred))
+
+    accMeans.append(sum(accuracies) / len(accuracies))
+
+    print("Accuracy:", round(sum(accMeans)/len(accMeans), 2))
 
 now = datetime.now()
 
